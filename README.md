@@ -39,6 +39,7 @@ continue smooth operations.
 ### The system admin
 
 1. As a system admin, I want a single point of entry for all service endpoints (I don't want to deal with ports)
+1. As a system admin, I want a single point of entry over SSL, managed as automatically as possible (Let's Encrypt)
 1. As a system admin, I want to know the entire suite of tools are being backed up regularly to the cloud
 1. As a system admin, I want to easily restore the entire stack
 1. As a system admin, I want to easily selectively restore a single part of the stack
