@@ -6,7 +6,7 @@ The goal of this repository is not to create tools, but to maintain a single doc
 and docker images (if needed) for a collection of tools to accomplish the goals of the various users
 of such a system. 
 
-This stack of tools aims to bring big enterprise features like what Esri or Tableuax provides, but in an
+This stack of tools aims to bring big enterprise features like what Esri or Tableau provides, but in an
 open-source way. 
 
 These desires were born out of everyday operations in my own personal experience. 
