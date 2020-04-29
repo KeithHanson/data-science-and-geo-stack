@@ -12,13 +12,43 @@ services:
       - web
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./conf/traefik/traefik.toml:/traefik.toml
-      - ./conf/traefik/acme.json:/acme.json
     container_name: traefik
     environment:
-      - DNSIMPLE_OAUTH_TOKEN=${DNSIMPLE_OAUTH_TOKEN}
-      - DNSIMPLE_BASE_URL=https://api.dnsimple.com/
+      - DNSIMPLE_OAUTH_TOKEN=${DNSIMPLE_OAUTH_TOKEN} #example environment config for dns challenge
+      - DNSIMPLE_BASE_URL=https://api.dnsimple.com/ #example envoronment config for dns challenge
+    command:
+     - --debug=true
+     - --logLevel=DEBUG
+     - --defaultentrypoints=https,http
+     - --entryPoints=Name:http Address::80 Redirect.EntryPoint:https
+     - --entryPoints=Name:https Address::443 TLS
+     - --retry
+     - --docker.endpoint=unix:///var/run/docker.sock
+     - --docker.domain=${TRAEFIK_DOMAIN} #main domain
+     - --docker.watch=true
+     - --docker.exposedbydefault=false
+     - --acme.email=${ACME_EMAIL} #email for acme automation
+     - --acme.storage=acme.json
+     - --acme.entryPoint=https
+     - --acme.onHostRule=true
+     - --acme.dnschallenge.provider=${ACME_DNS_PROVIDER} #providers: https://github.com/acmesh-official/acme.sh/wiki/dnsapi
+     - --acme.domains=${TRAEFIK_DOMAIN} #main domain
+     - --api
 
+  # Example service that would be exposed over SSL via Traefik labels
+  hello:
+    image: nginxdemos/hello
+    networks:
+      - web
+    expose: 
+      - "80"
+    labels:
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.basic.frontend.rule=Host:hello.${TRAEFIK_DOMAIN}"
+      - "traefik.port=80"
+      - "traefik.protocol=http"
+    
 networks:
   web:
-    external: true
+    external: true #docker network create web
