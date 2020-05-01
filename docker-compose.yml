@@ -48,7 +48,70 @@ services:
       - "traefik.basic.frontend.rule=Host:hello.${TRAEFIK_DOMAIN}"
       - "traefik.port=80"
       - "traefik.protocol=http"
-    
+  db:
+    networks:
+      - private
+    image: kartoza/postgis:12.0
+    volumes:
+      - postgis-data:/var/lib/postgresql
+      - dbbackups:/backups
+    environment:
+      # If you need to create multiple database you can add coma separated databases eg gis,data
+      - POSTGRES_DB=gis
+      - POSTGRES_USER=docker
+      - POSTGRES_PASS=docker
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      # Add extensions you need to be enabled by default in the DB. Default are the five specified below
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
+    ports:
+      - 25432:5432
+    restart: on-failure
+
+  dbbackups:
+    networks:
+      - private
+    image: kartoza/pg-backup:12.0
+    hostname: pg-backups
+    volumes:
+      - dbbackups:/backups
+    links:
+      - db:db
+    environment:
+      - DUMPPREFIX=PG_db
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASS=${PG_PASS}
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=db
+      - POSTGRES_DBNAME=gis
+    restart: on-failure
+    depends_on:
+      - db
+
+  pgadmin:
+    networks:
+      - web
+      - private
+    links:
+      - db:db
+    expose: 
+      - "80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    image: dpage/pgadmin4
+    labels:
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.basic.frontend.rule=Host:pgadmin.${TRAEFIK_DOMAIN}"
+      - "traefik.port=80"
+      - "traefik.protocol=http"
+
+
 networks:
   web:
     external: true #docker network create web
+  private:
+    external: true #docker network create external
+volumes:
+  dbbackups:
+  postgis-data:
