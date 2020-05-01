@@ -17,8 +17,8 @@ services:
       - DNSIMPLE_OAUTH_TOKEN=${DNSIMPLE_OAUTH_TOKEN} #example environment config for dns challenge
       - DNSIMPLE_BASE_URL=https://api.dnsimple.com/ #example envoronment config for dns challenge
     command:
-     - --debug=true
-     - --logLevel=DEBUG
+     - --debug=false
+     - --logLevel=WARN
      - --defaultentrypoints=https,http
      - --entryPoints=Name:http Address::80 Redirect.EntryPoint:https
      - --entryPoints=Name:https Address::443 TLS
