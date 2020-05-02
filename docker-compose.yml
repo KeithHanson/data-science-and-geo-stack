@@ -20,7 +20,7 @@ services:
      - --debug=false
      - --logLevel=WARN
      - --defaultentrypoints=https,http
-     - --entryPoints=Name:http Address::80 Redirect.EntryPoint:https
+     - --entryPoints=Name:http Address::80 # We need 80 for file uploading for now
      - --entryPoints=Name:https Address::443 TLS
      - --retry
      - --docker.endpoint=unix:///var/run/docker.sock
@@ -106,6 +106,38 @@ services:
       - "traefik.port=80"
       - "traefik.protocol=http"
 
+  tusd:
+    networks:
+      - web
+    expose:
+      - "1080"
+    environment:
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    image: tusproject/tusd
+    labels:
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.basic.frontend.rule=Host:tus.${TRAEFIK_DOMAIN}"
+      - "traefik.port=1080"
+      - "traefik.protocol=http"
+    command: "-s3-bucket=${AWS_S3_BUCKET}"
+
+  upload:
+    networks:
+      - web
+    expose:
+      - "80"
+    image: nginx
+    volumes: 
+      - ./conf/nginx/:/usr/share/nginx/html
+    labels:
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.basic.frontend.rule=Host:upload.${TRAEFIK_DOMAIN}"
+      - "traefik.port=80"
+      - "traefik.protocol=http"
 
 networks:
   web:
