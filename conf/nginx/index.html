@@ -19,7 +19,7 @@
              { id: 'license', name: 'License', placeholder: 'specify license' }
            ]
         })
-        .use(Uppy.Tus, {endpoint: 'http://tus.analyze.keithhanson.io/files/'})
+        .use(Uppy.Tus, {endpoint: 'http://tus.dsgis.shreveport-it.org/files/'})
 
       uppy.on('complete', (result) => {
         console.log('Upload complete! We’ve uploaded these files:', result.successful)

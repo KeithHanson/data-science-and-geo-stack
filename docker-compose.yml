@@ -14,8 +14,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     container_name: traefik
     environment:
-      - DNSIMPLE_OAUTH_TOKEN=${DNSIMPLE_OAUTH_TOKEN} #example environment config for dns challenge
-      - DNSIMPLE_BASE_URL=https://api.dnsimple.com/ #example envoronment config for dns challenge
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     command:
      - --debug=false
      - --logLevel=WARN
