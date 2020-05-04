@@ -13,13 +13,13 @@ These desires were born out of everyday operations in my own personal experience
 
 ## In short, the ambition of this repository is to provide:
  
-1. Database
-1. ETL Tools
-1. Data Science and Analysis Tools
-1. Visualization Tools
-1. Geospatial Tools
-1. Dashboard
-1. Communication tools
+1. Database (PostGIS)
+1. ETL Tools (n8n.io + PGFutter)
+1. Data Science and Analysis Tools (Jupyter Notebook Server)
+1. Visualization Tools (Chronograf for TimeSeries, Grafana for Dashboard/Visualization)
+1. Geospatial Tools (GeoServer + Kepler.gl)
+1. Dashboard (Grafana or ???)
+1. Communication tools (TBD)
 
 ### (Best Case) Usage Scenarios:
 
