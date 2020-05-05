@@ -1,2 +1,20 @@
 *.swp
 conf/traefik/acme.json
+
+# ignore rails files
+!/upload_to_futter/log/.keep
+!/upload_to_futter/storage/.keep
+!/upload_to_futter/tmp/.keep
+upload_to_futter/.bundle
+upload_to_futter/.byebug_history
+upload_to_futter/.yarn-integrity
+upload_to_futter/config/master.key
+upload_to_futter/log/*
+upload_to_futter/node_modules
+upload_to_futter/public/assets
+upload_to_futter/public/packs
+upload_to_futter/public/packs-test
+upload_to_futter/storage/*
+upload_to_futter/tmp/*
+upload_to_futter/yarn-debug.log*
+upload_to_futter/yarn-error.log
