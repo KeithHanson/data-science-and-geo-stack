@@ -1,150 +1,114 @@
-version: '2'
+version: "3.5"
 
 services:
   traefik:
     image: traefik:v1.7
-    restart: always
-    ports:
-      - 8080:8080
-      - 80:80
-      - 443:443
-    networks:
-      - web
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - --acme.dnschallenge.provider=${ACME_DNS_PROVIDER}
+      - --acme.domains=${TRAEFIK_DOMAIN}
+      - --acme.email=${ACME_EMAIL}
+      - --acme.entryPoint=https
+      - --acme.onHostRule=true
+      - --acme.storage=acme.json
+      - --api
+      - --debug=false
+      - --defaultentrypoints=https,http
+      - --docker.domain=${TRAEFIK_DOMAIN}
+      - --docker.endpoint=unix:///var/run/docker.sock
+      - --docker.exposedbydefault=false
+      - --docker.watch=true
+      - --entryPoints=Name:http Address::80
+      - --entryPoints=Name:https Address::443 TLS
+      - --logLevel=WARN
+      - --retry
     container_name: traefik
     environment:
-      - AWS_REGION=${AWS_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_REGION=${AWS_REGION}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    command:
-     - --debug=false
-     - --logLevel=WARN
-     - --defaultentrypoints=https,http
-     - --entryPoints=Name:http Address::80 # We need 80 for file uploading for now
-     - --entryPoints=Name:https Address::443 TLS
-     - --retry
-     - --docker.endpoint=unix:///var/run/docker.sock
-     - --docker.domain=${TRAEFIK_DOMAIN} #main domain
-     - --docker.watch=true
-     - --docker.exposedbydefault=false
-     - --acme.email=${ACME_EMAIL} #email for acme automation
-     - --acme.storage=acme.json
-     - --acme.entryPoint=https
-     - --acme.onHostRule=true
-     - --acme.dnschallenge.provider=${ACME_DNS_PROVIDER} #providers: https://github.com/acmesh-official/acme.sh/wiki/dnsapi
-     - --acme.domains=${TRAEFIK_DOMAIN} #main domain
-     - --api
-
-  # Example service that would be exposed over SSL via Traefik labels
-  hello:
-    image: nginxdemos/hello
     networks:
       - web
-    expose: 
-      - "80"
-    labels:
-      - "traefik.docker.network=web"
-      - "traefik.enable=true"
-      - "traefik.basic.frontend.rule=Host:hello.${TRAEFIK_DOMAIN}"
-      - "traefik.port=80"
-      - "traefik.protocol=http"
-  db:
+    ports:
+      - 443:443
+      - 8080:8080
+      - 80:80
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik:/tmp
+
+  postgis:
+    image: kartoza/postgis:12.0
+    container_name: postgis
+    environment:
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      - POSTGRES_DB=gis
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
+      - POSTGRES_PASS=docker
+      - POSTGRES_USER=docker
     networks:
       - private
-    image: kartoza/postgis:12.0
-    volumes:
-      - postgis-data:/var/lib/postgresql
-      - dbbackups:/backups
-    environment:
-      # If you need to create multiple database you can add coma separated databases eg gis,data
-      - POSTGRES_DB=gis
-      - POSTGRES_USER=docker
-      - POSTGRES_PASS=docker
-      - ALLOW_IP_RANGE=0.0.0.0/0
-      # Add extensions you need to be enabled by default in the DB. Default are the five specified below
-      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
     ports:
       - 25432:5432
-    restart: on-failure
-
-  dbbackups:
-    networks:
-      - private
-    image: kartoza/pg-backup:12.0
-    hostname: pg-backups
+    restart: always
     volumes:
-      - dbbackups:/backups
-    links:
-      - db:db
-    environment:
-      - DUMPPREFIX=PG_db
-      - POSTGRES_USER=${PG_USER}
-      - POSTGRES_PASS=${PG_PASS}
-      - POSTGRES_PORT=5432
-      - POSTGRES_HOST=db
-      - POSTGRES_DBNAME=gis
-    restart: on-failure
-    depends_on:
-      - db
+      - backups:/backups
+      - postgis:/var/lib/postgresql
 
   pgadmin:
-    networks:
-      - web
-      - private
-    links:
-      - db:db
-    expose: 
-      - "80"
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    depends_on:
+      - postgis
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
-    image: dpage/pgadmin4
-    labels:
-      - "traefik.docker.network=web"
-      - "traefik.enable=true"
-      - "traefik.basic.frontend.rule=Host:pgadmin.${TRAEFIK_DOMAIN}"
-      - "traefik.port=80"
-      - "traefik.protocol=http"
-
-  tusd:
-    networks:
-      - web
-    expose:
-      - "1080"
-    environment:
-      - AWS_REGION=${AWS_REGION}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    image: tusproject/tusd
-    labels:
-      - "traefik.docker.network=web"
-      - "traefik.enable=true"
-      - "traefik.basic.frontend.rule=Host:tus.${TRAEFIK_DOMAIN}"
-      - "traefik.port=1080"
-      - "traefik.protocol=http"
-    command: "-s3-bucket=${AWS_S3_BUCKET}"
-
-  upload:
-    networks:
-      - web
     expose:
       - "80"
-    image: nginx
-    volumes: 
-      - ./conf/nginx/:/usr/share/nginx/html
     labels:
+      - "traefik.basic.frontend.rule=Host:pgadmin.${TRAEFIK_DOMAIN}"
       - "traefik.docker.network=web"
       - "traefik.enable=true"
-      - "traefik.basic.frontend.rule=Host:upload.${TRAEFIK_DOMAIN}"
       - "traefik.port=80"
       - "traefik.protocol=http"
+    networks:
+      - private
+      - web
+    restart: always
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+
+  pg-backup:
+    image: kartoza/pg-backup:12.0
+    container_name: pg-backup
+    depends_on:
+      - postgis
+    environment:
+      - DUMPPREFIX=PG_db
+      - POSTGRES_DBNAME=gis
+      - POSTGRES_HOST=postgis
+      - POSTGRES_PASS=${PG_PASS}
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${PG_USER}
+    hostname: pg-backups
+    networks:
+      - private
+    restart: always
+    volumes:
+      - backups:/backups
 
 networks:
-  web:
-    external: true #docker network create web
   private:
-    external: true #docker network create external
+    name: private
+  web:
+    name: web
+
 volumes:
-  dbbackups:
-  postgis-data:
+  backups:
+    name: backups
+  pgadmin:
+    name: pgadmin
+  postgis:
+    name: postgis
+  traefik:
+    name: traefik
