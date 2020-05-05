@@ -97,6 +97,27 @@ services:
     volumes:
       - backups:/backups
 
+  upload:
+    build: ./upload_to_futter/
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server --environment production --binding 0.0.0.0 --port 80"
+    container_name: upload
+    depends_on:
+      - postgis
+    expose:
+      - "80"
+    labels:
+      - "traefik.basic.frontend.rule=Host:upload.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=80"
+      - "traefik.protocol=http"
+    networks:
+      - private
+      - web
+    restart: always
+    volumes:
+      - ./upload_to_futter/:/upload_to_futter/
+
 networks:
   private:
     name: private
