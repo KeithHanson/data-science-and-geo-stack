@@ -18,3 +18,7 @@ upload_to_futter/storage/*
 upload_to_futter/tmp/*
 upload_to_futter/yarn-debug.log*
 upload_to_futter/yarn-error.log
+
+.env
+tiger-data/*
+geoserver
