@@ -1,3 +1,6 @@
 Rails.application.routes.draw do
-  root 'pages#upload'
+  root 'uploads#form'
+
+  get '/form', to: 'uploads#form'
+  post '/submit', to: 'uploads#submit'
 end

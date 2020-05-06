@@ -103,6 +103,10 @@ services:
     container_name: upload
     depends_on:
       - postgis
+    environment:
+      - RAILS_DB_HOST=postgis
+      - RAILS_DB_PASSWORD=${PG_PASS}
+      - RAILS_DB_USERNAME=${PG_USER}
     expose:
       - "80"
     labels:
