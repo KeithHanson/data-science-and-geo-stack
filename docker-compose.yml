@@ -138,8 +138,25 @@ services:
       - web
       - private
     restart: always
-    volumes: 
+    volumes:
       - grafana:/var/lib/grafana grafana/grafana 
+
+  jupyter:
+    image: jupyter/datascience-notebook
+    container_name: jupyter
+    env_file: .env
+    expose:
+      - "8888"
+    labels:
+      - "traefik.basic.frontend.rule=Host:jupyter.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=8888"
+      - "traefik.protocol=http"
+    networks:
+      - web
+      - private
+    restart: always
 
   upload:
     build: ./upload_to_futter/
