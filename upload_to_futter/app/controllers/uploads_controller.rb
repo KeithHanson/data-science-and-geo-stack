@@ -9,7 +9,7 @@ class UploadsController < ApplicationController
     file_path = params["csv-file"].tempfile.path rescue nil
 
     if file_name && file_path
-      `./pgfutter --dbname upload_to_futter --host postgis --port 5432 --username docker --pass docker --table #{file_name} csv #{file_path}`
+      `./pgfutter --dbname #{ENV['PGFUTTER_DATABASE']} --host #{ENV['PGFUTTER_HOST']} --port #{ENV['PGFUTTER_PORT']} --username #{ENV['PGFUTTER_USERNAME']} --pass #{ENV['PGFUTTER_PASSWORD']} --table #{file_name} csv #{file_path}`
     end
   end
 end
