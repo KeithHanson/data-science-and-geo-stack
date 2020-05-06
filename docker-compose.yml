@@ -42,12 +42,12 @@ services:
       - private
     restart: always
     volumes:
-      - backups:/backups
-      - postgis:/var/lib/postgresql
-      - ./tiger-data:/tiger-data/
       - ./postgis-tiger-scripts/00_setup_tiger_data.sql:/docker-entrypoint-initdb.d/00_setup_tiger_data.sql
       - ./postgis-tiger-scripts/load-nation.sh:/load-nation.sh
       - ./postgis-tiger-scripts/load-states.sh:/load-states.sh
+      - backups:/backups
+      - postgis-tiger-data:/tiger-data/
+      - postgis:/var/lib/postgresql
 
   pgadmin:
     image: dpage/pgadmin4
@@ -122,12 +122,32 @@ services:
     volumes:
       - ./kepler.gl:/usr/share/nginx/html:ro
 
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    env_file: .env
+    expose:
+      - "3000"
+    labels:
+      - "traefik.basic.frontend.rule=Host:grafana.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=3000"
+      - "traefik.protocol=http"
+    networks:
+      - web
+      - private
+    restart: always
+    volumes: 
+      - grafana:/var/lib/grafana grafana/grafana 
+
   upload:
     build: ./upload_to_futter/
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server --environment production --binding 0.0.0.0 --port 80"
     container_name: upload
     depends_on:
       - postgis
+    env_file: .env
     environment:
       - RAILS_DB_HOST=postgis
       - RAILS_DB_PASSWORD=${PG_PASS}
@@ -158,11 +178,13 @@ volumes:
     name: backups
   geoserver:
     name: geoserver
+  grafana:
+    name: grafana
   pgadmin:
     name: pgadmin
   postgis:
     name: postgis
-  tiger-data:
+  postgis-tiger-data:
     name: postgis-tiger-data
   traefik:
     name: traefik
