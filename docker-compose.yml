@@ -102,7 +102,8 @@ services:
       - web
     restart: always
     volumes:
-      - geoserver:/var/local/geoserver 
+      - geoserver_var.local.geoserver.exts.:/var/local/geoserver-exts/
+      - geoserver_var.local.geoserver.:/var/local/geoserver/
 
   kepler:
     image: nginx
@@ -193,8 +194,10 @@ networks:
 volumes:
   backups:
     name: backups
-  geoserver:
-    name: geoserver
+  geoserver_var.local.geoserver.exts.:
+    name: geoserver_var.local.geoserver.exts.
+  geoserver_var.local.geoserver.:
+    name: geoserver_var.local.geoserver.
   grafana:
     name: grafana
   pgadmin:
