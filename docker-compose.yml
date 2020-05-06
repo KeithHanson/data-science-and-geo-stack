@@ -123,6 +123,25 @@ services:
       - "traefik.port=80"
       - "traefik.protocol=http"
 
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    env_file: .env
+    expose:
+      - "3000"
+    networks:
+      - web
+      - private
+    restart: always
+    volumes: 
+      - grafana-storage:/var/lib/grafana grafana/grafana 
+    labels:
+      - "traefik.basic.frontend.rule=Host:grafana.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=3000"
+      - "traefik.protocol=http"
+
 networks:
   private:
     name: private
@@ -142,3 +161,5 @@ volumes:
     name: geoserver
   tiger-data:
     name: postgis-tiger-data
+  grafana-storage:
+    name: grafana-storage
