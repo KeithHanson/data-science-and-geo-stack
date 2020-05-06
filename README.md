@@ -21,6 +21,32 @@ These desires were born out of everyday operations in my own personal experience
 1. Dashboard (Grafana or ???)
 1. Communication tools (TBD)
 
+## Docker Images Used So Far:
+
+- traefik:v1.7
+- kartoza/postgis:12.0
+- kartoza/pg-backup:12.0
+- dpage/pgadmin4
+- oscarfonts/geoserver
+- crazycapivara/kepler.gl
+
+## Subdomains You'll Need:
+
+This setup works using Traefik host rules. That means you'll need to point several subdomains at your docker host's IP.
+
+- http(s)://ROOT-URL:8080/ - Traefik dashboard
+- http(s)://geoserver.ROOT-URL/ - Geoserver GIS platform
+- http(s)://pgadmin.ROOT-URL/ - PGAdmin 4 instance
+- http(s)://keplergl.ROOT-URL/ - Kepler.gl
+
+## Setup
+
+See the .env-sample file to get everything off the ground. 
+
+Once it's running, here are a few URLs you'll want:
+
+
+
 ### (Best Case) Usage Scenarios:
 
 These are a few contrived and not-so-contrived reasons you may want to use these tools.

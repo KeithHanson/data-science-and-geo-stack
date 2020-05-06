@@ -22,10 +22,7 @@ services:
       - --logLevel=WARN
       - --retry
     container_name: traefik
-    environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_REGION=${AWS_REGION}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    env_file: .env
     networks:
       - web
     ports:
@@ -40,29 +37,25 @@ services:
   postgis:
     image: kartoza/postgis:12.0
     container_name: postgis
-    environment:
-      - ALLOW_IP_RANGE=0.0.0.0/0
-      - POSTGRES_DB=gis
-      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
-      - POSTGRES_PASS=docker
-      - POSTGRES_USER=docker
+    env_file: .env
     networks:
       - private
-    ports:
-      - 25432:5432
     restart: always
     volumes:
       - backups:/backups
       - postgis:/var/lib/postgresql
+      - ./tiger-data:/tiger-data/
+      - ./postgis-tiger-scripts/00_setup_tiger_data.sql:/docker-entrypoint-initdb.d/00_setup_tiger_data.sql
+      - ./postgis-tiger-scripts/load-nation.sh:/load-nation.sh
+      - ./postgis-tiger-scripts/load-states.sh:/load-states.sh
+
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
     depends_on:
       - postgis
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    env_file: .env
     expose:
       - "80"
     labels:
@@ -83,40 +76,52 @@ services:
     container_name: pg-backup
     depends_on:
       - postgis
-    environment:
-      - DUMPPREFIX=PG_db
-      - POSTGRES_DBNAME=gis
-      - POSTGRES_HOST=postgis
-      - POSTGRES_PASS=${PG_PASS}
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=${PG_USER}
+    env_file: .env
     hostname: pg-backups
     networks:
       - private
     restart: always
     volumes:
       - backups:/backups
-
-  upload:
-    build: ./upload_to_futter/
-    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server --environment production --binding 0.0.0.0 --port 80"
-    container_name: upload
+  
+  geoserver:
+    image: oscarfonts/geoserver
+    container_name: geoserver
     depends_on:
       - postgis
-    expose:
-      - "80"
-    labels:
-      - "traefik.basic.frontend.rule=Host:upload.${TRAEFIK_DOMAIN}"
-      - "traefik.docker.network=web"
-      - "traefik.enable=true"
-      - "traefik.port=80"
-      - "traefik.protocol=http"
+    env_file: .env
+    expose: 
+      - "8080"
     networks:
       - private
       - web
     restart: always
     volumes:
-      - ./upload_to_futter/:/upload_to_futter/
+      - geoserver:/var/local/geoserver 
+    labels:
+      - "traefik.basic.frontend.rule=Host:geoserver.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+
+  kepler:
+    image: nginx
+    container_name: kepler
+    env_file: .env
+    expose: 
+      - "80"
+    networks:
+      - web
+    restart: always
+    volumes:
+      - ./kepler.gl:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.basic.frontend.rule=Host:kepler.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=80"
+      - "traefik.protocol=http"
 
 networks:
   private:
@@ -133,3 +138,7 @@ volumes:
     name: postgis
   traefik:
     name: traefik
+  geoserver:
+    name: geoserver
+  tiger-data:
+    name: postgis-tiger-data
