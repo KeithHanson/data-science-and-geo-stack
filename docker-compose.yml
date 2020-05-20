@@ -150,7 +150,7 @@ services:
       - private
     restart: always
     volumes:
-      - grafana:/var/lib/grafana grafana/grafana 
+      - grafana:/var/lib/grafana/
 
   jupyter:
     image: jupyter/datascience-notebook
