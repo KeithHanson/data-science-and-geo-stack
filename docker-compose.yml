@@ -201,6 +201,25 @@ services:
     volumes:
       - ./upload_to_futter/:/upload_to_futter/
 
+  content:
+    image: nginxdemos/hello
+    container_name: content
+    expose:
+      - "80"
+    labels:
+      - "docker-volume-backup.stop-during-backup=true"
+      - "traefik.basic.frontend.rule=Host:content.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=80"
+      - "traefik.protocol=http"
+    networks:
+      - private
+      - web
+    restart: always
+    volumes:
+      - ./html:/usr/share/nginx/html
+
   backup:
     image: futurice/docker-volume-backup:2.0.0
     environment:
