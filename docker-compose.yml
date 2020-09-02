@@ -44,6 +44,8 @@ services:
       - "docker-volume-backup.stop-during-backup=true"
     networks:
       - private
+    ports:
+      - 5432:5432
     restart: always
     volumes:
       - ./postgis-tiger-scripts/00_setup_tiger_data.sql:/docker-entrypoint-initdb.d/00_setup_tiger_data.sql
@@ -218,6 +220,8 @@ services:
 
   backup:
     image: futurice/docker-volume-backup:2.0.0
+    container_name: backup
+    restart: always
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_S3_BUCKET_NAME: dsgis-backups
