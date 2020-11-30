@@ -77,6 +77,26 @@ services:
     volumes:
       - pgadmin:/var/lib/pgadmin
 
+  metabase:
+    image: metabase/metabase
+    container_name: metabase
+    depends_on:
+      - postgis
+    env_file: .env
+    ports:
+      - 3000:3000
+    labels:
+      - "docker-volume-backup.stop-during-backup=true"
+      - "traefik.basic.frontend.rule=Host:metabase.${TRAEFIK_DOMAIN}"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=80"
+      - "traefik.protocol=http"
+    networks:
+      - private
+      - web
+    restart: always
+
   pg-backup:
     image: kartoza/pg-backup:12.0
     container_name: pg-backup
